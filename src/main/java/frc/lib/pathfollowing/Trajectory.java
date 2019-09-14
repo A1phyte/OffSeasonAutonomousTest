@@ -1,4 +1,4 @@
-package frc.robot.types;
+package frc.lib.pathfollowing;
 
 import java.util.ArrayList;
 import java.util.NoSuchElementException;
