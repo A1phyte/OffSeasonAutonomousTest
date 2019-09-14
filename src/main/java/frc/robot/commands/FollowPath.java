@@ -17,7 +17,7 @@ import java.io.IOException;
 
 import edu.wpi.first.wpilibj.*;
 
-import frc.robot.types.Trajectory;
+import frc.lib.pathfollowing.Trajectory;
 
 public class FollowPath extends Command {
 
