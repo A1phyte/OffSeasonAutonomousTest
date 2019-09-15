@@ -20,7 +20,7 @@ import frc.robot.RobotMap;
 /**
  * Add your docs here.
  */
-public class DriveTrain extends Subsystem {
+public class Drivetrain extends Subsystem {
   // Put methods for controlling this subsystem
   // here. Call these from Commands.
   private SpeedController frontLeft = new CANSparkMax(RobotMap.FRONT_LEFT_MOTOR_ID, MotorType.kBrushless);

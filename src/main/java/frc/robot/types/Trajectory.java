@@ -1,7 +1,6 @@
 package frc.robot.types;
 
 import java.util.ArrayList;
-import java.util.NoSuchElementException;
 import java.io.File;
 import java.io.FileReader;
 import java.io.BufferedReader;
@@ -51,12 +50,12 @@ public class Trajectory {
     }
 
     public boolean hasNext() {
-        return currentIndex >= points.size();
+        return currentIndex >= points.size() - 1;
     }
 
     public PathPoint next() {
         if (!hasNext()) {
-            throw new NoSuchElementException();
+            return null;
         }
         return points.get(currentIndex++);
     }

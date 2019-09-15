@@ -27,7 +27,7 @@ public class FollowPath extends Command {
   private Trajectory rightTrajectory;
   private Trajectory leftTrajectory;
   private final double initialHeading;
-  private final double pathStartHeading;
+  private double pathStartHeading;
 
   private double kV = 1 / RobotMap.MAX_VELOCITY; // Velocity
   private double kA = .035; // Acceleration
@@ -63,13 +63,12 @@ public class FollowPath extends Command {
    * - 'M' or 'm' for mirrored
    */
   public FollowPath(String pathName, char[] args) {
-    requires(Robot.driveTrain);
+    requires(Robot.drivetrain);
     this.pathName = pathName;
     reverse = args.toString().contains("r") || args.toString().contains("R");
     mirror = args.toString().contains("m") || args.toString().contains("M");
     initialHeading = boundTo180(Robot.gyro.getYaw()); 
     startTime = Timer.getFPGATimestamp();
-    pathStartHeading = leftTrajectory.getStartHeading();
   }
 
   /**
@@ -88,10 +87,11 @@ public class FollowPath extends Command {
    */
   private void readTrajectory() {
     try {
-      File leftFile = new File(Filesystem.getDeployDirectory() + "paths/" + pathName + "_left.csv");
-      File rightFile = new File(Filesystem.getDeployDirectory() + "paths/" + pathName + "_right.csv");
+      File leftFile = new File(Filesystem.getDeployDirectory() + "/paths/" + pathName + "_left.csv");
+      File rightFile = new File(Filesystem.getDeployDirectory() + "/paths/" + pathName + "_right.csv");
       leftTrajectory = (mirror^reverse) ? new Trajectory(rightFile) : new Trajectory(leftFile);
       rightTrajectory = (mirror^reverse) ? new Trajectory(leftFile) : new Trajectory(rightFile);
+      pathStartHeading = leftTrajectory.getStartHeading();
     } catch (IOException exc) {
       exc.printStackTrace();
       leftTrajectory = null;
@@ -128,6 +128,7 @@ public class FollowPath extends Command {
   // Called just before this Command runs the first time
   @Override
   protected void initialize() {
+    Robot.drivetrain.setEncoders();
     readTrajectory();
     shuffleboardSetup();
   } 
@@ -137,11 +138,14 @@ public class FollowPath extends Command {
   protected void execute() {
     nextLeftValues = leftTrajectory.next();
     nextRightValues = rightTrajectory.next();
-    errorL = (!reverse ? nextLeftValues.position : -nextLeftValues.position) - Robot.driveTrain.getLeftDistance();
-    errorR = (!reverse ? nextRightValues.position : -nextLeftValues.position) - Robot.driveTrain.getRightDistance();
+    if (nextLeftValues == null || nextRightValues == null) {
+      return;
+    }
+    errorL = (!reverse ? nextLeftValues.position : -nextLeftValues.position) - Robot.drivetrain.getLeftDistance();
+    errorR = (!reverse ? nextRightValues.position : -nextLeftValues.position) - Robot.drivetrain.getRightDistance();
     totalErrorL += errorL;
     totalErrorR += errorR;
-    errorH = (nextLeftValues.heading - pathStartHeading) - (boundTo180(Robot.gyro.getYaw()) - initialHeading);
+    errorH = (nextLeftValues.heading - pathStartHeading) - (Math.abs(boundTo180(Robot.gyro.getYaw())) - Math.abs(initialHeading));
 
     double leftOutput = reverse ?
                         kV * nextLeftValues.velocity +
@@ -173,7 +177,7 @@ public class FollowPath extends Command {
                         kD * errorR - lastErrorR -
                         kH * errorH;
     
-    Robot.driveTrain.drive(leftOutput, rightOutput);
+    Robot.drivetrain.drive(leftOutput, rightOutput);
 
     lastErrorL = errorL;
     lastErrorR = errorR;
