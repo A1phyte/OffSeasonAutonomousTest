@@ -50,7 +50,7 @@ public class Trajectory {
     }
 
     public boolean hasNext() {
-        return currentIndex >= points.size() - 1;
+        return currentIndex >= points.size();
     }
 
     public PathPoint next() {
