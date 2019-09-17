@@ -10,6 +10,7 @@ package frc.robot.commands;
 import java.io.File;
 
 import edu.wpi.first.wpilibj.command.Command;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Robot;
 import frc.robot.RobotMap;
 
@@ -26,13 +27,13 @@ public class FollowPath extends Command {
   private final boolean mirror;
   private Trajectory rightTrajectory;
   private Trajectory leftTrajectory;
-  private final double initialHeading;
-  private final double pathStartHeading;
+  private double initialHeading;
+  private double pathStartHeading;
 
   private double kV = 1 / RobotMap.MAX_VELOCITY; // Velocity
-  private double kA = .035; // Acceleration
-  private double kH = -.009; // Heading
-  private double kP = .12; // Proportional
+  private double kA = 0; //.035 // Acceleration
+  private double kH = 0; //-.009; // Heading
+  private double kP = 0; //.12; // Proportional
   private double kI = 0; // Integral
   private double kD = 0; // Derivative
 
@@ -40,11 +41,12 @@ public class FollowPath extends Command {
   // Variables used in execute, declared here to avoid GC
   private double errorL;
   private double errorR;
-  private double totalErrorL = 0d;
-  private double totalErrorR = 0d;
+  private double totalErrorL;
+  private double totalErrorR ;
   private double lastErrorL;
   private double lastErrorR;
   private double errorH;
+
 
   private double startTime;
 
@@ -65,11 +67,11 @@ public class FollowPath extends Command {
   public FollowPath(String pathName, char[] args) {
     requires(Robot.driveTrain);
     this.pathName = pathName;
-    reverse = args.toString().contains("r") || args.toString().contains("R");
-    mirror = args.toString().contains("m") || args.toString().contains("M");
-    initialHeading = boundTo180(Robot.gyro.getYaw()); 
+    System.out.println(args.toString());
+    System.out.println(reverse = new String(args).contains("r") || new String(args).contains("R"));
+    mirror = new String(args).contains("m") || new String(args).contains("M");
+    initialHeading = boundTo180(Robot.gyro.getYaw());
     startTime = Timer.getFPGATimestamp();
-    pathStartHeading = leftTrajectory.getStartHeading();
   }
 
   /**
@@ -88,14 +90,17 @@ public class FollowPath extends Command {
    */
   private void readTrajectory() {
     try {
-      File leftFile = new File(Filesystem.getDeployDirectory() + "paths/" + pathName + "_left.csv");
-      File rightFile = new File(Filesystem.getDeployDirectory() + "paths/" + pathName + "_right.csv");
+      // System.out.println(Filesystem.getDeployDirectory().toString());
+      File leftFile = new File("/home/lvuser/deploy/paths/" + pathName + "_left.csv");
+      File rightFile = new File("/home/lvuser/deploy/paths/" + pathName + "_right.csv");
       leftTrajectory = (mirror^reverse) ? new Trajectory(rightFile) : new Trajectory(leftFile);
       rightTrajectory = (mirror^reverse) ? new Trajectory(leftFile) : new Trajectory(rightFile);
     } catch (IOException exc) {
       exc.printStackTrace();
       leftTrajectory = null;
       rightTrajectory = null;
+    } finally { //in conclusion jayden bad
+      // if (leftTrajectory != null) { System.out.println("TRAJECTORY EXISTS "); }
     }
   }
 
@@ -115,6 +120,7 @@ public class FollowPath extends Command {
     kP = Preferences.getInstance().getDouble("kP", kP);
     kI = Preferences.getInstance().getDouble("kI", kI);
     kD = Preferences.getInstance().getDouble("kD", kD);
+    
   }
 
   private double boundTo180(double degrees) {
@@ -128,8 +134,18 @@ public class FollowPath extends Command {
   // Called just before this Command runs the first time
   @Override
   protected void initialize() {
+    Robot.driveTrain.setEncoders(0);
     readTrajectory();
     shuffleboardSetup();
+
+    totalErrorL = 0d;
+    totalErrorR = 0d;
+
+    if (reverse) {
+      System.out.printf("%s is reverse", pathName);
+    }
+    pathStartHeading = leftTrajectory.getStartHeading();
+    
   } 
 
   // Called repeatedly when this Command is scheduled to run
@@ -137,58 +153,90 @@ public class FollowPath extends Command {
   protected void execute() {
     nextLeftValues = leftTrajectory.next();
     nextRightValues = rightTrajectory.next();
-    errorL = (!reverse ? nextLeftValues.position : -nextLeftValues.position) - Robot.driveTrain.getLeftDistance();
-    errorR = (!reverse ? nextRightValues.position : -nextLeftValues.position) - Robot.driveTrain.getRightDistance();
+    if (reverse) {
+      nextLeftValues.position *= -1; nextRightValues.position *= -1; 
+      nextLeftValues.acceleration *= -1; nextRightValues.acceleration *= -1;
+      nextLeftValues.velocity *= -1; nextLeftValues.velocity *= -1;
+
+    }
+
+    errorL =/*(!reverse ? */nextLeftValues.position/* : -nextLeftValues.position)*/ - Robot.driveTrain.getLeftDistance();
+    errorR =/*(!reverse ? */nextRightValues.position/* : -nextLeftValues.position)*/ - Robot.driveTrain.getRightDistance();
     totalErrorL += errorL;
     totalErrorR += errorR;
-    errorH = (nextLeftValues.heading - pathStartHeading) - (boundTo180(Robot.gyro.getYaw()) - initialHeading);
+    errorH = (nextLeftValues.heading - pathStartHeading) - (Math.abs(boundTo180(Robot.gyro.getYaw())) - Math.abs(initialHeading));
 
-    double leftOutput = reverse ?
+    /*double leftOutput = !reverse ?
                         kV * nextLeftValues.velocity +
                         kA * nextLeftValues.acceleration +
                         kP * errorL +
                         kI * totalErrorL +
-                        kD * errorL - lastErrorL +
+                        kD * (errorL - lastErrorL) + 
                         kH * errorH
                         :
                         -kV * nextLeftValues.velocity +
                         -kA * nextLeftValues.acceleration +
                         kP * errorL +
                         kI * totalErrorL +
-                        kD * errorL - lastErrorL +
+                        kD * (errorL - lastErrorL) +
                         kH * errorH;
                         
-    double rightOutput = reverse ?
-                        kV * nextRightValues.velocity +
-                        kA * nextRightValues.acceleration +
-                        kP * errorR +
-                        kI * totalErrorR +
-                        kD * errorR - lastErrorR -
-                        kH * errorH
-                        :
-                        -kV * nextRightValues.velocity +
-                        -kA * nextRightValues.acceleration +
-                        kP * errorR +
-                        kI * totalErrorR +
-                        kD * errorR - lastErrorR -
-                        kH * errorH;
-    
-    Robot.driveTrain.drive(leftOutput, rightOutput);
+    double rightOutput = !reverse ?
+                         kV * nextRightValues.velocity +
+                         kA * nextRightValues.acceleration +
+                         kP * errorR +
+                         kI * totalErrorR +
+                         kD * (errorR - lastErrorR) -
+                         kH * errorH
+                         :
+                         -kV * nextRightValues.velocity +
+                         -kA * nextRightValues.acceleration +
+                         kP * errorR +
+                         kI * totalErrorR +
+                         kD * (errorR - lastErrorR) -
+                         kH * errorH;
+*/
 
+    double leftOutput =
+                            kV * nextLeftValues.velocity +
+                            kA * nextLeftValues.acceleration +
+                            kP * errorL +
+                            kI * totalErrorL +
+                            kD * (errorL - lastErrorL) +
+                            kH * errorH;
+    double rightOutput = 
+                            kV * nextRightValues.velocity +
+                            kA * nextRightValues.acceleration +
+                            kP * errorR +
+                            kI * totalErrorR +
+                            kD * (errorR - lastErrorR) -
+                            kH * errorH;
+
+    //REVERSE
+    
+
+
+    leftOutput /= 10;
+    rightOutput /= 10;
+    
+    Robot.driveTrain.drive(-leftOutput, -rightOutput);
+    //System.out.println(leftOutput);
     lastErrorL = errorL;
     lastErrorR = errorR;
+    //System.out.println(initialHeading);
+    
   }
 
   // Make this return true when this Command no longer needs to run execute()
   @Override
   protected boolean isFinished() {
     if (
-      !leftTrajectory.hasNext() || 
-      !rightTrajectory.hasNext() ||
-      leftTrajectory == null ||
-      rightTrajectory == null ||
-      Timer.getFPGATimestamp() - startTime >= leftTrajectory.getTotalTime() ||
-      Timer.getFPGATimestamp() - startTime >= rightTrajectory.getTotalTime()
+      leftTrajectory.hasNext() || 
+      rightTrajectory.hasNext() // ||
+      // leftTrajectory == null ||
+      // rightTrajectory == null // ||
+      // Timer.getFPGATimestamp() - startTime >= leftTrajectory.getTotalTime() ||
+      // Timer.getFPGATimestamp() - startTime >= rightTrajectory.getTotalTime()
     ) { return true; }
     return false;
   }
@@ -196,6 +244,8 @@ public class FollowPath extends Command {
   // Called once after isFinished returns true
   @Override
   protected void end() {
+    System.out.println(leftTrajectory.currentIndex);
+    System.out.println(leftTrajectory.points.size());
   }
 
   // Called when another command which requires one or more of the same

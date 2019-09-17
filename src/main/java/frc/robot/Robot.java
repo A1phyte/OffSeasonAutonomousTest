@@ -14,6 +14,7 @@ import edu.wpi.first.wpilibj.command.Scheduler;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 import frc.robot.commands.FollowPath;
+import frc.robot.commands.pathgroups.HabToLS;
 import frc.robot.subsystems.*;
 
 import com.kauailabs.navx.frc.*;
@@ -47,7 +48,7 @@ public class Robot extends TimedRobot {
     gyro = new AHRS();
     prefs = Preferences.getInstance();
 
-    autonomousCommand = new FollowPath("Test", "");
+    autonomousCommand = new HabToLS();
 
     driveTrain.setEncoders();
     // chooser.addOption("My Auto", new MyAutoCommand());
@@ -58,6 +59,7 @@ public class Robot extends TimedRobot {
    * this for items like diagnostics that you want ran during disabled,
    * autonomous, teleoperated and test.
    *
+   * 
    * <p>This runs after the mode specific periodic functions, but before
    * LiveWindow and SmartDashboard integrated updating.
    */
@@ -65,6 +67,8 @@ public class Robot extends TimedRobot {
   public void robotPeriodic() {
     SmartDashboard.putNumber("Left Speed", (driveTrain.getLeftDistance() - prevLeftDis) * 5);
     SmartDashboard.putNumber("Right Speed", (driveTrain.getRightDistance() - prevRightDis) * 5);
+    SmartDashboard.putNumber("Left Distance", driveTrain.getLeftDistance());
+    Preferences.getInstance().putDouble("Heading", Robot.gyro.getYaw());
     prevLeftDis = driveTrain.getLeftDistance();
     prevRightDis = driveTrain.getRightDistance();
   }
@@ -96,6 +100,7 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void autonomousInit() {
+    driveTrain.setEncoders();
     if (autonomousCommand != null) { autonomousCommand.start(); }
   }
 

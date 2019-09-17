@@ -39,15 +39,18 @@ public class Trajectory {
     public Trajectory(File file) throws IOException {
         BufferedReader csvReader = new BufferedReader(new FileReader(file));
         String row;
+        points = new ArrayList<PathPoint>();
         while ((row = csvReader.readLine()) != null) {
             String[] data = row.split(",");
             double pos = Double.parseDouble(data[0]);
             double vel = Double.parseDouble(data[1]);
             double acc = Double.parseDouble(data[2]);
             double hea = Double.parseDouble(data[3]);
+            
             points.add(new PathPoint(pos, vel, acc, hea));
         }
         csvReader.close();
+        currentIndex = 0;
     }
 
     public boolean hasNext() {
@@ -55,9 +58,6 @@ public class Trajectory {
     }
 
     public PathPoint next() {
-        if (!hasNext()) {
-            throw new NoSuchElementException();
-        }
         return points.get(currentIndex++);
     }
 
