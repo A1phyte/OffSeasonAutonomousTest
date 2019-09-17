@@ -27,7 +27,11 @@ public class FollowPath extends Command {
   private final boolean mirror;
   private Trajectory rightTrajectory;
   private Trajectory leftTrajectory;
+<<<<<<< HEAD
   private double initialHeading;
+=======
+  private final double initialHeading;
+>>>>>>> a4683c83daa2eda56a4a18c8324d709ecb9aabd2
   private double pathStartHeading;
 
   private double kV = 1 / RobotMap.MAX_VELOCITY; // Velocity
@@ -65,7 +69,7 @@ public class FollowPath extends Command {
    * - 'M' or 'm' for mirrored
    */
   public FollowPath(String pathName, char[] args) {
-    requires(Robot.driveTrain);
+    requires(Robot.drivetrain);
     this.pathName = pathName;
     System.out.println(args.toString());
     System.out.println(reverse = new String(args).contains("r") || new String(args).contains("R"));
@@ -90,11 +94,17 @@ public class FollowPath extends Command {
    */
   private void readTrajectory() {
     try {
+<<<<<<< HEAD
       // System.out.println(Filesystem.getDeployDirectory().toString());
       File leftFile = new File("/home/lvuser/deploy/paths/" + pathName + "_left.csv");
       File rightFile = new File("/home/lvuser/deploy/paths/" + pathName + "_right.csv");
+=======
+      File leftFile = new File(Filesystem.getDeployDirectory() + "/paths/" + pathName + "_left.csv");
+      File rightFile = new File(Filesystem.getDeployDirectory() + "/paths/" + pathName + "_right.csv");
+>>>>>>> a4683c83daa2eda56a4a18c8324d709ecb9aabd2
       leftTrajectory = (mirror^reverse) ? new Trajectory(rightFile) : new Trajectory(leftFile);
       rightTrajectory = (mirror^reverse) ? new Trajectory(leftFile) : new Trajectory(rightFile);
+      pathStartHeading = leftTrajectory.getStartHeading();
     } catch (IOException exc) {
       exc.printStackTrace();
       leftTrajectory = null;
@@ -134,7 +144,11 @@ public class FollowPath extends Command {
   // Called just before this Command runs the first time
   @Override
   protected void initialize() {
+<<<<<<< HEAD
     Robot.driveTrain.setEncoders(0);
+=======
+    Robot.drivetrain.setEncoders();
+>>>>>>> a4683c83daa2eda56a4a18c8324d709ecb9aabd2
     readTrajectory();
     shuffleboardSetup();
 
@@ -153,6 +167,7 @@ public class FollowPath extends Command {
   protected void execute() {
     nextLeftValues = leftTrajectory.next();
     nextRightValues = rightTrajectory.next();
+<<<<<<< HEAD
     if (reverse) {
       nextLeftValues.position *= -1; nextRightValues.position *= -1; 
       nextLeftValues.acceleration *= -1; nextRightValues.acceleration *= -1;
@@ -162,6 +177,13 @@ public class FollowPath extends Command {
 
     errorL =/*(!reverse ? */nextLeftValues.position/* : -nextLeftValues.position)*/ - Robot.driveTrain.getLeftDistance();
     errorR =/*(!reverse ? */nextRightValues.position/* : -nextLeftValues.position)*/ - Robot.driveTrain.getRightDistance();
+=======
+    if (nextLeftValues == null || nextRightValues == null) {
+      return;
+    }
+    errorL = (!reverse ? nextLeftValues.position : -nextLeftValues.position) - Robot.drivetrain.getLeftDistance();
+    errorR = (!reverse ? nextRightValues.position : -nextLeftValues.position) - Robot.drivetrain.getRightDistance();
+>>>>>>> a4683c83daa2eda56a4a18c8324d709ecb9aabd2
     totalErrorL += errorL;
     totalErrorR += errorR;
     errorH = (nextLeftValues.heading - pathStartHeading) - (Math.abs(boundTo180(Robot.gyro.getYaw())) - Math.abs(initialHeading));
@@ -214,6 +236,10 @@ public class FollowPath extends Command {
 
     //REVERSE
     
+<<<<<<< HEAD
+=======
+    Robot.drivetrain.drive(leftOutput, rightOutput);
+>>>>>>> a4683c83daa2eda56a4a18c8324d709ecb9aabd2
 
 
     leftOutput /= 10;

@@ -12,7 +12,7 @@ import frc.robot.Robot;
 
 public class JoystickDrive extends Command {
   public JoystickDrive() {
-    requires(Robot.driveTrain);
+    requires(Robot.drivetrain);
   }
 
   // Called just before this Command runs the first time
@@ -30,7 +30,7 @@ public class JoystickDrive extends Command {
     if (Math.abs(rotation) < .1) { rotation = 0d; }
     else { rotation /= Robot.oi.joystick.getTrigger() ? 3 : 2; }
 
-    Robot.driveTrain.drive(speed+rotation, speed-rotation);
+    Robot.drivetrain.drive(speed+rotation, speed-rotation);
   }
 
   // Make this return true when this Command no longer needs to run execute()

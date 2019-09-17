@@ -1,7 +1,6 @@
 package frc.lib.pathfollowing;
 
 import java.util.ArrayList;
-import java.util.NoSuchElementException;
 import java.io.File;
 import java.io.FileReader;
 import java.io.BufferedReader;
@@ -58,6 +57,12 @@ public class Trajectory {
     }
 
     public PathPoint next() {
+<<<<<<< HEAD:src/main/java/frc/lib/pathfollowing/Trajectory.java
+=======
+        if (!hasNext()) {
+            return null;
+        }
+>>>>>>> a4683c83daa2eda56a4a18c8324d709ecb9aabd2:src/main/java/frc/robot/types/Trajectory.java
         return points.get(currentIndex++);
     }
 
