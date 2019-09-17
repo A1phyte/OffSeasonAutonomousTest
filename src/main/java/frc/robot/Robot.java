@@ -66,19 +66,12 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void robotPeriodic() {
-<<<<<<< HEAD
-    SmartDashboard.putNumber("Left Speed", (driveTrain.getLeftDistance() - prevLeftDis) * 5);
-    SmartDashboard.putNumber("Right Speed", (driveTrain.getRightDistance() - prevRightDis) * 5);
-    SmartDashboard.putNumber("Left Distance", driveTrain.getLeftDistance());
-    Preferences.getInstance().putDouble("Heading", Robot.gyro.getYaw());
-    prevLeftDis = driveTrain.getLeftDistance();
-    prevRightDis = driveTrain.getRightDistance();
-=======
     SmartDashboard.putNumber("Left Speed", (drivetrain.getLeftDistance() - prevLeftDis) * 5);
     SmartDashboard.putNumber("Right Speed", (drivetrain.getRightDistance() - prevRightDis) * 5);
+    SmartDashboard.putNumber("Left Distance", drivetrain.getLeftDistance());
+    Preferences.getInstance().putDouble("Heading", Robot.gyro.getYaw());
     prevLeftDis = drivetrain.getLeftDistance();
     prevRightDis = drivetrain.getRightDistance();
->>>>>>> a4683c83daa2eda56a4a18c8324d709ecb9aabd2
   }
 
   /**
@@ -108,7 +101,7 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void autonomousInit() {
-    driveTrain.setEncoders();
+    drivetrain.setEncoders();
     if (autonomousCommand != null) { autonomousCommand.start(); }
   }
 

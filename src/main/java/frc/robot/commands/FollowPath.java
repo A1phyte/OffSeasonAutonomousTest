@@ -145,7 +145,7 @@ public class FollowPath extends Command {
   @Override
   protected void initialize() {
 <<<<<<< HEAD
-    Robot.driveTrain.setEncoders(0);
+    Robot.drivetrain.setEncoders(0);
 =======
     Robot.drivetrain.setEncoders();
 >>>>>>> a4683c83daa2eda56a4a18c8324d709ecb9aabd2
@@ -167,7 +167,6 @@ public class FollowPath extends Command {
   protected void execute() {
     nextLeftValues = leftTrajectory.next();
     nextRightValues = rightTrajectory.next();
-<<<<<<< HEAD
     if (reverse) {
       nextLeftValues.position *= -1; nextRightValues.position *= -1; 
       nextLeftValues.acceleration *= -1; nextRightValues.acceleration *= -1;
@@ -175,15 +174,8 @@ public class FollowPath extends Command {
 
     }
 
-    errorL =/*(!reverse ? */nextLeftValues.position/* : -nextLeftValues.position)*/ - Robot.driveTrain.getLeftDistance();
-    errorR =/*(!reverse ? */nextRightValues.position/* : -nextLeftValues.position)*/ - Robot.driveTrain.getRightDistance();
-=======
-    if (nextLeftValues == null || nextRightValues == null) {
-      return;
-    }
-    errorL = (!reverse ? nextLeftValues.position : -nextLeftValues.position) - Robot.drivetrain.getLeftDistance();
-    errorR = (!reverse ? nextRightValues.position : -nextLeftValues.position) - Robot.drivetrain.getRightDistance();
->>>>>>> a4683c83daa2eda56a4a18c8324d709ecb9aabd2
+    errorL =/*(!reverse ? */nextLeftValues.position/* : -nextLeftValues.position)*/ - Robot.drivetrain.getLeftDistance();
+    errorR =/*(!reverse ? */nextRightValues.position/* : -nextLeftValues.position)*/ - Robot.drivetrain.getRightDistance();
     totalErrorL += errorL;
     totalErrorR += errorR;
     errorH = (nextLeftValues.heading - pathStartHeading) - (Math.abs(boundTo180(Robot.gyro.getYaw())) - Math.abs(initialHeading));
@@ -236,16 +228,12 @@ public class FollowPath extends Command {
 
     //REVERSE
     
-<<<<<<< HEAD
-=======
-    Robot.drivetrain.drive(leftOutput, rightOutput);
->>>>>>> a4683c83daa2eda56a4a18c8324d709ecb9aabd2
 
 
     leftOutput /= 10;
     rightOutput /= 10;
     
-    Robot.driveTrain.drive(-leftOutput, -rightOutput);
+    Robot.drivetrain.drive(-leftOutput, -rightOutput);
     //System.out.println(leftOutput);
     lastErrorL = errorL;
     lastErrorR = errorR;
